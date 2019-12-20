@@ -1,8 +1,12 @@
 package com.example.android_recordertest;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
@@ -175,6 +179,36 @@ public class MainActivity extends AppCompatActivity {
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         0));
         setContentView(ll);
+
+
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        registerReceiver(new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1);
+                Log.d(LOG_TAG, "Audio SCO state: " + state);
+
+                if (AudioManager.SCO_AUDIO_STATE_CONNECTED == state) {
+                    /*
+                     * Now the connection has been established to the bluetooth device.
+                     * Record audio or whatever (on another thread).With AudioRecord you can record with an object created like this:
+                     * new AudioRecord(MediaRecorder.AudioSource.MIC, 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                     * AudioFormat.ENCODING_PCM_16BIT, audioBufferSize);
+                     *
+                     * After finishing, don't forget to unregister this receiver and
+                     * to stop the bluetooth connection with am.stopBluetoothSco();
+                     */
+                    unregisterReceiver(this);
+                }
+
+            }
+        }, new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_CHANGED));
+
+        Log.d(LOG_TAG, "starting bluetooth");
+        am.startBluetoothSco();
+
     }
 
     @Override
